@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 from . import serializers
 from django.contrib.auth.models import User
-from .models import Post
+from .models import Post, Like
 from .permissions import IsOwnerOrReadOnly
 
 # Create your views here.
@@ -41,5 +41,24 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     # IsOwnerOrReadOnly мы создали в файле permissions
     # Здесь нужны оба разрешения, поскольку обновлять или удалять пост должен
     # только залогиненный пользователь, а также его владелец.
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly]
+
+
+class LikeList(generics.ListCreateAPIView):
+    queryset = Like.objects.all()
+    serializer_class = serializers.LikeSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class LikeDetail(generics.RetrieveDestroyAPIView):
+    '''RetrieveDestroyAPIView здесь отличается, что только
+    API-методы: get и delete для одной сущности.
+    '''
+    queryset = Like.objects.all()
+    serializer_class = serializers.LikeSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly]
