@@ -2,7 +2,7 @@ from rest_framework import generics, permissions
 from . import serializers
 from django.contrib.auth.models import User
 from .models import Post, Like
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsNotFanOrReadOnly
 
 # Create your views here.
 
@@ -48,7 +48,8 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
 class LikeList(generics.ListCreateAPIView):
     queryset = Like.objects.all()
     serializer_class = serializers.LikeSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                          IsNotFanOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -60,5 +61,5 @@ class LikeDetail(generics.RetrieveDestroyAPIView):
     '''
     queryset = Like.objects.all()
     serializer_class = serializers.LikeSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly]
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                          # IsOwnerOrReadOnly]

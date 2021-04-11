@@ -37,9 +37,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class LikeSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
-    # Мне кажется, что так можно задать, что у каждого лайка один овнер
-    # и один пост
-    post = serializers.PrimaryKeyRelatedField(many=False, read_only=False)
 
     class Meta:
         model = Like
