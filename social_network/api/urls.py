@@ -9,6 +9,7 @@ urlpatterns = [
     path('posts/<int:pk>/', views.PostDetail.as_view()),
     path('likes/', views.LikeList.as_view()),
     path('likes/<int:pk>/', views.LikeDetail.as_view()),
+    path('analytics/', views.AnalyticsList.as_view()),
 ]
 
 # Форматирует окончания, например .json

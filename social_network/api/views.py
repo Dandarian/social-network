@@ -1,8 +1,11 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from . import serializers
 from django.contrib.auth.models import User
 from .models import Post, Like
 from .permissions import IsOwnerOrReadOnly, IsNotFanOrReadOnly
+import datetime as DT
 
 # Create your views here.
 
@@ -61,5 +64,44 @@ class LikeDetail(generics.RetrieveDestroyAPIView):
     '''
     queryset = Like.objects.all()
     serializer_class = serializers.LikeSerializer
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly,
-                          # IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly]
+
+
+class AnalyticsList(APIView):
+    def get_analytics_one_date(self, date):
+        '''Возвращает аналитику за одну дату
+        '''
+        # Считает кол-во лайков за определённую дату
+        number_of_likes = Like.objects.filter(
+            created=date).count()
+        return {'date': date, 'number_of_likes': number_of_likes}
+
+    def get_dates(self, query_params):
+        '''Возвращает список дат от начальной до конечной
+        '''
+        date_from = DT.datetime.strptime(
+            query_params['date_from'], '%Y-%m-%d').date()
+        date_to = DT.datetime.strptime(
+            query_params['date_to'], '%Y-%m-%d').date()
+        dates_period = [date_from, date_to]
+        print (dates_period)
+        delta = date_to - date_from
+        dates = [date_from + DT.timedelta(i) for i in range(delta.days + 1)]
+        print (dates)
+        return dates
+
+    def get_final_list(self, query_params):
+        dates = self.get_dates(query_params)
+        final_list = []
+        for date in dates:
+            analytics_one_date = self.get_analytics_one_date(date)
+            final_list.append(analytics_one_date)
+        return final_list
+
+    def get(self, request):
+        final_list = self.get_final_list(request.query_params)
+        return Response(
+            final_list,
+            status=status.HTTP_200_OK
+        )

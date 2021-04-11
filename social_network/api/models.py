@@ -15,7 +15,7 @@ class Post(models.Model):
 
 
 class Like(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateField(auto_now_add=True)
     owner = models.ForeignKey(
         'auth.User', related_name='likes', on_delete=models.CASCADE)
     post = models.ForeignKey(
