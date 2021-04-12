@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Post, Like
+from .models import Post, Like, UserActivity
 
 # REST Framework Django использует сериализаторы, чтобы переводить наборы
 # запросов и экземпляры моделей в JSON-данные.
@@ -41,3 +41,10 @@ class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
         fields = ['id', 'owner', 'post']
+
+
+class UserActivitySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserActivity
+        fields = ['id', 'last_login', 'last_request']

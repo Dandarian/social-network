@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from . import serializers
 from django.contrib.auth.models import User
-from .models import Post, Like
+from .models import Post, Like, UserActivity
 from .permissions import IsOwnerOrReadOnly, IsNotFanOrReadOnly
 import datetime as DT
 
@@ -105,3 +105,16 @@ class AnalyticsList(APIView):
             final_list,
             status=status.HTTP_200_OK
         )
+
+
+class UserActivityList(generics.ListAPIView):
+    '''ListCreateAPIView предоставляет распространенный обработчик
+    API-методов: get для списка.
+    '''
+    queryset = UserActivity.objects.all()
+    serializer_class = serializers.UserActivitySerializer
+
+
+class UserActivityDetail(generics.RetrieveAPIView):
+    queryset = UserActivity.objects.all()
+    serializer_class = serializers.UserActivitySerializer

@@ -10,6 +10,8 @@ urlpatterns = [
     path('likes/', views.LikeList.as_view()),
     path('likes/<int:pk>/', views.LikeDetail.as_view()),
     path('analytics/', views.AnalyticsList.as_view()),
+    path('user-activity/', views.UserActivityList.as_view()),
+    path('user-activity/<int:pk>/', views.UserActivityDetail.as_view()),
 ]
 
 # Форматирует окончания, например .json
