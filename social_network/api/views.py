@@ -6,8 +6,45 @@ from django.contrib.auth.models import User
 from .models import Post, Like, UserActivity
 from .permissions import IsOwnerOrReadOnly, IsNotFanOrReadOnly
 import datetime as DT
+from django.utils.timezone import get_current_timezone
+from rest_framework_simplejwt.tokens import RefreshToken
+import json
 
 # Create your views here.
+
+
+class Login(generics.CreateAPIView):
+    def get_tokens_for_user(self, user):
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
+    def save_last_login(self, user):
+        # определяется юзер айди
+        user_id = user.id
+        print(user_id)
+        # берём нужного юзера
+        user_activity_object = UserActivity.objects.filter(id=user_id)[0]
+        # и потом в базу данных записывается время этому юзеру
+        user_activity_object.last_login = DT.datetime.now(
+            tz=get_current_timezone())
+        user_activity_object.save()
+
+    def get_final_list(self, body):
+        body_loads = json.loads(body)
+        user = User.objects.filter(username=body_loads['username'])[0]
+        print(user)
+        self.save_last_login(user)
+        return self.get_tokens_for_user(user)
+
+    def post(self, request):
+        return Response(
+            self.get_final_list(request.body),
+            status=status.HTTP_200_OK
+        )
 
 
 class UserList(generics.ListAPIView):

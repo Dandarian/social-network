@@ -39,8 +39,6 @@ class UserActivity(models.Model):
 # Счас каждый запрос перехватывается
 @receiver(request_started)
 def my_callback(sender, environ, **kwargs):
-    print("Request started!")
-    print(environ)
     # Из этого запроса берётся jwt токен, если он есть
     if 'HTTP_AUTHORIZATION' in environ:
         token = environ['HTTP_AUTHORIZATION'].split(' ')[1]
