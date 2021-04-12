@@ -9,6 +9,7 @@ import datetime as DT
 from django.utils.timezone import get_current_timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 import json
+from django.contrib.auth.hashers import check_password
 
 # Create your views here.
 
@@ -35,19 +36,38 @@ class Login(generics.CreateAPIView):
 
     def get_final_list(self, body):
         body_loads = json.loads(body)
-        user = User.objects.filter(username=body_loads['username'])[0]
-        print(user)
-        self.save_last_login(user)
-        return self.get_tokens_for_user(user)
+        user_objects = User.objects.filter(
+            username=body_loads['username'])
+        # Проверка существования юзера
+        if user_objects.count() == 1:
+            user = user_objects[0]
+            # Проверка верности пароля
+            if check_password(body_loads['password'], user.password):
+                self.save_last_login(user)
+                return self.get_tokens_for_user(user)
+            else:
+                return False
+        else:
+            return False
 
     def post(self, request):
-        return Response(
-            self.get_final_list(request.body),
-            status=status.HTTP_200_OK
-        )
+        final_list = self.get_final_list(request.body)
+        if final_list is False:
+            return Response(
+                {
+                    "detail":
+                        "No active account found with the given credentials"
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        else:
+            return Response(
+                final_list,
+                status=status.HTTP_200_OK
+            )
 
 
-class UserList(generics.ListAPIView):
+class UserList(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
 
