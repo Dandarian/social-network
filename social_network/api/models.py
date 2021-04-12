@@ -1,10 +1,12 @@
 from django.db import models
 from django.core.signals import request_started
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 import jwt
 import datetime as DT
 from django.utils.timezone import get_current_timezone
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -32,8 +34,8 @@ class Like(models.Model):
 
 
 class UserActivity(models.Model):
-    last_login = models.DateTimeField()
-    last_request = models.DateTimeField()
+    last_login = models.DateTimeField(blank=True, null=True)
+    last_request = models.DateTimeField(blank=True, null=True)
 
 
 # Счас каждый запрос перехватывается
@@ -54,3 +56,9 @@ def my_callback(sender, environ, **kwargs):
         user_activity_object.last_request = DT.datetime.now(
             tz=get_current_timezone())
         user_activity_object.save()
+
+
+@receiver(post_save, sender=User)
+def create_user_activity(sender, instance, **kwargs):
+    UserActivity.objects.create()
+    print(instance.id)
