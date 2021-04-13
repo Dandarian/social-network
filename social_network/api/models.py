@@ -38,21 +38,17 @@ class UserActivity(models.Model):
     last_request = models.DateTimeField(blank=True, null=True)
 
 
-# Счас каждый запрос перехватывается
+# With every single request
 @receiver(request_started)
 def my_callback(sender, environ, **kwargs):
-    # Из этого запроса берётся jwt токен, если он есть
+    # Take jwt if it exists
     if 'HTTP_AUTHORIZATION' in environ:
         token = environ['HTTP_AUTHORIZATION'].split(' ')[1]
-        # библиотекой он расшифровывается
-        # проверяя сигнатуру
+        # Decode and check signature
         token_decode = jwt.decode(
             token, settings.SECRET_KEY, algorithms="HS256")
-        # определяется юзер айди
         user_id = token_decode['user_id']
-        # берём нужного юзера
         user_activity_object = UserActivity.objects.filter(id=user_id)[0]
-        # и потом в базу данных записывается время этому юзеру
         user_activity_object.last_request = DT.datetime.now(
             tz=get_current_timezone())
         user_activity_object.save()
@@ -61,4 +57,3 @@ def my_callback(sender, environ, **kwargs):
 @receiver(post_save, sender=User)
 def create_user_activity(sender, instance, **kwargs):
     UserActivity.objects.create()
-    print(instance.id)

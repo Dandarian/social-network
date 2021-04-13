@@ -3,6 +3,7 @@ import json
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
+    # This permission is for the object.
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -11,15 +12,19 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 
 class IsNotFanOrReadOnly(permissions.BasePermission):
-    # Поскольку используется со списком, то не has_object_permission, а
+    # This permission is for the list.
     def has_permission(self, request, view):
-        '''Проверяет, лайкал ли уже этот юзер этот пост
+        '''Did user already like this post?
         '''
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        post = json.loads(request.body.decode('utf-8'))['post']
-        # Фильтруем по посту и юзеру
-        likes = view.queryset.filter(post=post, owner=request.user)
-        # Не выдаём разрешения, если лайк уже поставлен
-        return not likes.exists()
+        body = json.loads(request.body.decode('utf-8'))
+
+        if 'post' in body:
+            post_id = body['post']
+            likes = view.queryset.filter(post=post_id, owner=request.user)
+            # Do not give permission if the like is already exists.
+            return not likes.exists()
+
+        return True

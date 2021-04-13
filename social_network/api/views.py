@@ -24,24 +24,19 @@ class Login(generics.CreateAPIView):
         }
 
     def save_last_login(self, user):
-        # определяется юзер айди
         user_id = user.id
-        print(user_id)
-        # берём нужного юзера
         user_activity_object = UserActivity.objects.filter(id=user_id)[0]
-        # и потом в базу данных записывается время этому юзеру
         user_activity_object.last_login = DT.datetime.now(
             tz=get_current_timezone())
         user_activity_object.save()
 
-    def get_final_list(self, body):
-        body_loads = json.loads(body)
+    def get_final_list(self, body_loads):
         user_objects = User.objects.filter(
             username=body_loads['username'])
-        # Проверка существования юзера
+        # Is user exists?
         if user_objects.count() == 1:
             user = user_objects[0]
-            # Проверка верности пароля
+            # Is password correct?
             if check_password(body_loads['password'], user.password):
                 self.save_last_login(user)
                 return self.get_tokens_for_user(user)
@@ -51,7 +46,26 @@ class Login(generics.CreateAPIView):
             return False
 
     def post(self, request):
-        final_list = self.get_final_list(request.body)
+        body_loads = json.loads(request.body)
+        if "username" not in body_loads:
+            return Response(
+                {
+                    "username": [
+                        "This field is required."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if "password" not in body_loads:
+            return Response(
+                {
+                    "password": [
+                        "This field is required."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        final_list = self.get_final_list(body_loads)
         if final_list is False:
             return Response(
                 {
@@ -83,29 +97,29 @@ class UserCreate(generics.CreateAPIView):
 
 
 class PostList(generics.ListCreateAPIView):
-    '''ListCreateAPIView предоставляет распространенный обработчик
-    API-методов: get и post для списка.
+    '''ListCreateAPIView gives a common handler of
+    API-methods: get и post for the list.
     '''
     queryset = Post.objects.all()
     serializer_class = serializers.PostSerializer
-    # IsAuthenticatedOrReadOnly встроен в rest_framework
+    # IsAuthenticatedOrReadOnly is from rest_framework.
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        ''' Чтобы при создании указывался авторизованный юзер
+        ''' Specify an authorized user when creating post.
         '''
         serializer.save(owner=self.request.user)
 
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
-    '''RetrieveUpdateDestroyAPIView предоставляет распространенный обработчик
-    API-методов: get, update и delete для одной сущности.
+    '''RetrieveUpdateDestroyAPIView gives a common handler of
+    API-methods: get, update и delete for one entity.
     '''
     queryset = Post.objects.all()
     serializer_class = serializers.PostSerializer
-    # IsOwnerOrReadOnly мы создали в файле permissions
-    # Здесь нужны оба разрешения, поскольку обновлять или удалять пост должен
-    # только залогиненный пользователь, а также его владелец.
+    # IsOwnerOrReadOnly is from file permissions.py
+    # Here we need both permissions, cause only
+    # authorized owner can delete.
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly]
 
@@ -121,8 +135,8 @@ class LikeList(generics.ListCreateAPIView):
 
 
 class LikeDetail(generics.RetrieveDestroyAPIView):
-    '''RetrieveDestroyAPIView здесь отличается, что только
-    API-методы: get и delete для одной сущности.
+    '''RetrieveDestroyAPIView
+    API-methods: get и delete for one entity.
     '''
     queryset = Like.objects.all()
     serializer_class = serializers.LikeSerializer
@@ -131,26 +145,23 @@ class LikeDetail(generics.RetrieveDestroyAPIView):
 
 
 class AnalyticsList(APIView):
+    ''' Total likes to all posts.
+    '''
     def get_analytics_one_date(self, date):
-        '''Возвращает аналитику за одну дату
-        '''
-        # Считает кол-во лайков за определённую дату
+        # For one date.
         number_of_likes = Like.objects.filter(
             created=date).count()
         return {'date': date, 'number_of_likes': number_of_likes}
 
     def get_dates(self, query_params):
-        '''Возвращает список дат от начальной до конечной
+        '''Returns date list from first date to last.
         '''
         date_from = DT.datetime.strptime(
             query_params['date_from'], '%Y-%m-%d').date()
         date_to = DT.datetime.strptime(
             query_params['date_to'], '%Y-%m-%d').date()
-        dates_period = [date_from, date_to]
-        print (dates_period)
         delta = date_to - date_from
         dates = [date_from + DT.timedelta(i) for i in range(delta.days + 1)]
-        print (dates)
         return dates
 
     def get_final_list(self, query_params):
@@ -170,8 +181,8 @@ class AnalyticsList(APIView):
 
 
 class UserActivityList(generics.ListAPIView):
-    '''ListCreateAPIView предоставляет распространенный обработчик
-    API-методов: get для списка.
+    '''ListCreateAPIView
+    API-methods: get for the list.
     '''
     queryset = UserActivity.objects.all()
     serializer_class = serializers.UserActivitySerializer

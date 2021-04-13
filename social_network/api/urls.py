@@ -3,8 +3,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 
 urlpatterns = [
-    path('auth/', views.Login.as_view()),
     path('register/', views.UserCreate.as_view()),
+    path('auth/', views.Login.as_view()),
     path('users/', views.UserList.as_view()),
     path('users/<int:pk>/', views.UserDetail.as_view()),
     path('posts/', views.PostList.as_view()),
@@ -16,5 +16,5 @@ urlpatterns = [
     path('user-activity/<int:pk>/', views.UserActivityDetail.as_view()),
 ]
 
-# Форматирует окончания, например .json
+# Formats endings, for example .json
 urlpatterns = format_suffix_patterns(urlpatterns)

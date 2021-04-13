@@ -2,11 +2,11 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Post, Like, UserActivity
 
-# REST Framework Django использует сериализаторы, чтобы переводить наборы
-# запросов и экземпляры моделей в JSON-данные.
+# REST Framework Django uses serializers to translate query sets
+# and model instances into JSON data.
 
-# Сериализатор также создает простые методы create() и update().
-# При необходимости их можно переписать.
+# The serializer also creates simple create() and update () methods.
+# If necessary, they can be rewritten.
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -19,13 +19,12 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # PrimaryKeyRelatedField представляет список публикаций
-    # в этом отношении многие-к-одному (many=True указывает
-    # на то, что постов может быть больше чем один).
-    # Если не задать read_only=True поле posts будет иметь права
-    # записи по умолчанию. Это значит, что будет возможность вручную
-    # задавать список статей, принадлежащих пользователю при его создании.
-    # Вряд ли это желаемое поведение.
+    # PrimaryKeyRelatedField gives
+    # many-to-many relation (many=True means
+    # that there can be many posts).
+    # If you do not set read_only=True, it will be possible to manually
+    # set the list of posts that belongs to the user when creating it.
+    # This is not the desired behavior.
 
     posts = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     likes = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
